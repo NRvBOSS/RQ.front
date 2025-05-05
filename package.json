@@ -17,7 +17,10 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.3",
+    "@vue/cli-service": "^5.0.8",
+    "svg-loader": "^0.0.2",
     "vite": "^6.2.4",
-    "vite-plugin-vue-devtools": "^7.7.2"
+    "vite-plugin-vue-devtools": "^7.7.2",
+    "vite-svg-loader": "^5.1.0"
   }
 }

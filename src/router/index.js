@@ -1,13 +1,22 @@
 import { createRouter, createWebHistory } from "vue-router";
-import landingPage from "../views/AppLandingPage.vue";
+import login from "../views/LoginAndSignin.vue";
+import mainPage from "../views/AppMain.vue";
 import questionsPage from "../views/AppQuestions.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: "/login",
+      component: login,
+    },
+    {
       path: "/",
-      component: landingPage,
+      redirect: "/login",
+    },
+    {
+      path: "/main",
+      component: mainPage,
     },
     {
       path: "/questionsPage",
