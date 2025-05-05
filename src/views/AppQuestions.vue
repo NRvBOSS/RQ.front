@@ -1,4 +1,7 @@
 <template>
+  <div>
+    
+  </div>
   <div v-for="(q, index) in questions" :key="q.id" class="py-4 px-8">
     <p class="font-bold">{{ index + 1 }}. {{ q.text }}</p>
     <div class="grid gap-2">
