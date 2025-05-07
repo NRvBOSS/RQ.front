@@ -92,7 +92,7 @@
                 />
               </div>
 
-              <div>
+              <div class="relative">
                 <label
                   for="signup-password"
                   class="block text-sm font-medium text-blue-100"
@@ -100,38 +100,34 @@
                 >
                 <input
                   id="signup-password"
-                  type="password"
+                  :type="showPassword ? 'text' : 'password'"
                   placeholder="••••••••"
                   v-model="password"
+                  minlength="6"
                   class="mt-1 w-full px-4 py-3 rounded-lg bg-blue-400 bg-opacity-20 border border-blue-300 focus:border-white focus:ring-2 focus:ring-white focus:ring-opacity-50 text-white placeholder-blue-200 transition"
                   required
                 />
+                <button
+                  type="button"
+                  @click="showPassword = !showPassword"
+                  class="absolute right-3 top-10 text-blue-100 hover:text-white"
+                >
+                  <span v-if="showPassword">Hide</span>
+                  <span v-else>Show</span>
+                </button>
               </div>
 
-              <div class="flex items-center">
-                <input
-                  id="terms"
-                  type="checkbox"
-                  class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  required
-                />
-                <label for="terms" class="ml-2 block text-sm text-blue-100">
-                  I agree to the
-                  <a href="#" class="text-white hover:text-blue-50 underline"
-                    >Terms</a
-                  >
-                  and
-                  <a href="#" class="text-white hover:text-blue-50 underline"
-                    >Privacy Policy</a
-                  >
-                </label>
+              <div v-if="errorMessage" class="text-red-300 text-sm">
+                {{ errorMessage }}
               </div>
 
               <button
                 type="submit"
                 class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition"
+                :disabled="isLoading"
               >
-                Create Account
+                <span v-if="isLoading">Processing...</span>
+                <span v-else>Create Account</span>
               </button>
             </form>
 
@@ -168,7 +164,7 @@
                 />
               </div>
 
-              <div>
+              <div class="relative">
                 <label
                   for="login-password"
                   class="block text-sm font-medium text-blue-100"
@@ -176,21 +172,33 @@
                 >
                 <input
                   id="login-password"
-                  type="password"
+                  :type="showPassword ? 'text' : 'password'"
                   placeholder="••••••••"
                   v-model="password"
                   class="mt-1 w-full px-4 py-3 rounded-lg bg-blue-400 bg-opacity-20 border border-blue-300 focus:border-white focus:ring-2 focus:ring-white focus:ring-opacity-50 text-white placeholder-blue-200 transition"
                   required
                 />
+                <button
+                  type="button"
+                  @click="showPassword = !showPassword"
+                  class="absolute right-3 top-10 text-blue-100 hover:text-white"
+                >
+                  <span v-if="showPassword">Hide</span>
+                  <span v-else>Show</span>
+                </button>
               </div>
 
-              <div class="flex items-center justify-between"></div>
+              <div v-if="errorMessage" class="text-red-300 text-sm">
+                {{ errorMessage }}
+              </div>
 
               <button
                 type="submit"
                 class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition"
+                :disabled="isLoading"
               >
-                Login
+                <span v-if="isLoading">Processing...</span>
+                <span v-else>Login</span>
               </button>
             </form>
 
@@ -215,19 +223,152 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import axios from "axios";
+import { toast } from "vue3-toastify";
+import "vue3-toastify/dist/index.css";
 
 const name = ref("");
 const email = ref("");
 const password = ref("");
+const showPassword = ref(false);
+const errorMessage = ref("");
 const showLogin = ref(false);
+const isLoading = ref(false);
 const router = useRouter();
 
-const handleSignup = () => {
-  router.push("/landing");
+const validateEmail = (email) => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+};
+
+const validatePassword = (password) => {
+  return password.length >= 6;
+};
+
+const handleLogin = async () => {
+  errorMessage.value = "";
+
+  if (!validateEmail(email.value)) {
+    errorMessage.value = "Please enter a valid email address";
+    return;
+  }
+
+  if (!validatePassword(password.value)) {
+    errorMessage.value = "Password must be at least 6 characters";
+    return;
+  }
+
+  const userData = {
+    email: email.value,
+    password: password.value,
+  };
+
+  isLoading.value = true;
+
+  try {
+    const response = await axios.post(
+      "http://localhost:3000/auth/login",
+      userData,
+      { withCredentials: true }
+    );
+
+    if (response.status === 200) {
+      toast.success("Login successful!");
+      router.push("/main");
+    }
+  } catch (error) {
+    console.error("Error logging in:", error);
+
+    if (error.response) {
+      switch (error.response.status) {
+        case 400:
+          errorMessage.value = "Invalid email or password format";
+          break;
+        case 401:
+          errorMessage.value = "Incorrect email or password";
+          break;
+        case 404:
+          errorMessage.value = "User not found. Please sign up.";
+          break;
+        default:
+          errorMessage.value =
+            "An error occurred during login. Please try again.";
+      }
+    } else {
+      errorMessage.value = "Network error. Please check your connection.";
+    }
+    toast.error(errorMessage.value);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const handleSignup = async () => {
+  errorMessage.value = "";
+
+  if (!name.value.trim()) {
+    errorMessage.value = "Please enter your name";
+    return;
+  }
+
+  if (!validateEmail(email.value)) {
+    errorMessage.value = "Please enter a valid email address";
+    return;
+  }
+
+  if (!validatePassword(password.value)) {
+    errorMessage.value = "Password must be at least 6 characters";
+    return;
+  }
+
+  const userData = {
+    username: name.value.trim(),
+    email: email.value,
+    password: password.value,
+  };
+
+  isLoading.value = true;
+
+  try {
+    const response = await axios.post(
+      "http://localhost:3000/auth/register",
+      userData,
+      { withCredentials: true }
+    );
+
+    if (response.status === 201) {
+      toast.success("Registration successful! Redirecting...");
+      // Automatically log in the user after registration
+      router.push("/main");
+    }
+  } catch (error) {
+    console.error("Error registering user:", error);
+
+    if (error.response) {
+      switch (error.response.status) {
+        case 400:
+          errorMessage.value = "Invalid registration data";
+          break;
+        case 409:
+          errorMessage.value = "Email already exists. Please login.";
+          break;
+        default:
+          errorMessage.value = "Registration failed. Please try again.";
+      }
+    } else {
+      errorMessage.value = "Network error. Please check your connection.";
+    }
+    toast.error(errorMessage.value);
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const toggleForm = () => {
   showLogin.value = !showLogin.value;
+  errorMessage.value = "";
+  // Clear password field when toggling forms
+  password.value = "";
 };
 </script>
 
