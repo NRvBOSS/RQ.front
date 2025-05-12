@@ -2,12 +2,12 @@
   <div class="min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 p-8">
     <!-- Header with welcome message -->
     <header class="text-center mb-12">
-      <h1 class="text-5xl font-bold text-amber-900 mb-4">
-        Welcome, {{ userName || "Quiz Enthusiast" }}!
-      </h1>
-      <p class="text-xl text-amber-800">
-        Test your knowledge with our exciting quizzes
-      </p>
+      <div v-if="loading">Yüklənir...</div>
+      <div v-else-if="err">{{ err }}</div>
+      <div v-else>
+        <h1>Welcome, {{ user.username }}</h1>
+        <!-- Digər hissələr buraya -->
+      </div>
     </header>
 
     <!-- Quiz Cards Grid -->
@@ -218,82 +218,45 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import axios from "axios";
 
-// Mock user data - in real app this would come from backend/authentication
-const userName = ref("John Doe");
-const currentUserId = ref("user123");
-
-// Quiz data - would come from backend in real app
+const user = ref(null);
 const quizzes = ref([]);
 const selectedQuiz = ref(null);
 const userStats = ref(null);
 const leaderboard = ref([]);
 
-// Mock data for demonstration
-const mockQuizzes = [
-  {
-    id: "1",
-    title: "JavaScript Fundamentals",
-    category: "Programming",
-    description: "Test your knowledge of core JavaScript concepts",
-    longDescription:
-      "This quiz covers fundamental JavaScript concepts including variables, data types, functions, and basic DOM manipulation. Perfect for beginners or those looking to refresh their knowledge.",
-    difficulty: "Medium",
-    questionCount: 15,
-    duration: 20,
-  },
-  {
-    id: "2",
-    title: "World Capitals",
-    category: "Geography",
-    description: "How well do you know world capitals?",
-    longDescription:
-      "Challenge yourself with this geography quiz that tests your knowledge of world capitals from all continents. Includes flags and fun facts about each country.",
-    difficulty: "Easy",
-    questionCount: 10,
-    duration: 15,
-  },
-  {
-    id: "3",
-    title: "Advanced CSS",
-    category: "Web Development",
-    description: "Flexbox, Grid and modern CSS features",
-    longDescription:
-      "For CSS enthusiasts! This advanced quiz tests your knowledge of modern CSS features including Flexbox, Grid, animations, transitions, and responsive design techniques.",
-    difficulty: "Hard",
-    questionCount: 20,
-    duration: 30,
-  },
-];
+const loading = ref(true);
+const err = ref("");
 
-const mockLeaderboard = [
-  { id: "user456", name: "Alice Smith", score: 98, date: "2023-05-15" },
-  { id: "user789", name: "Bob Johnson", score: 95, date: "2023-05-14" },
-  { id: "user123", name: "John Doe", score: 92, date: "2023-05-10" },
-  { id: "user321", name: "Emma Wilson", score: 90, date: "2023-05-12" },
-  { id: "user654", name: "Michael Brown", score: 88, date: "2023-05-11" },
-];
+// Fetch user on mount
+onMounted(async () => {
+  try {
+    const response = await axios.get("http://localhost:3000/auth/profile", {
+      withCredentials: true,
+    });
 
-// Simulate fetching data from backend
-onMounted(() => {
-  // In a real app, you would use axios/fetch to get this data
-  setTimeout(() => {
-    quizzes.value = mockQuizzes;
-  }, 500);
+    user.value = response.data;
+  } catch (error) {
+    err.value = error.response?.data?.message || "Failed to fetch user";
+    if (error.response?.status === 404) {
+      err.value = "No user found!";
+    }
+  } finally {
+    loading.value = false;
+  }
 });
 
 const openModal = (quiz) => {
   selectedQuiz.value = quiz;
 
-  // Simulate fetching user stats and leaderboard for this quiz
-  // In a real app, you would make API calls here
   userStats.value = {
     bestScore: Math.floor(Math.random() * 30) + 70,
     attempts: Math.floor(Math.random() * 5) + 1,
     lastAttempt: "2023-05-10",
   };
 
-  leaderboard.value = mockLeaderboard;
+  leaderboard.value = [];
 };
 
 const closeModal = () => {
