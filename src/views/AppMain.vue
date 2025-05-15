@@ -2,12 +2,7 @@
   <div class="min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 p-8">
     <!-- Header with welcome message -->
     <header class="text-center mb-12">
-      <div v-if="loading">Yüklənir...</div>
-      <div v-else-if="err">{{ err }}</div>
-      <div v-else>
-        <h1>Welcome, {{ user.username }}</h1>
-        <!-- Digər hissələr buraya -->
-      </div>
+      <h1>Welcome</h1>
     </header>
 
     <!-- Quiz Cards Grid -->
@@ -232,18 +227,8 @@ const err = ref("");
 // Fetch user on mount
 onMounted(async () => {
   try {
-    const response = await axios.get("http://localhost:3000/auth/profile", {
-      withCredentials: true,
-    });
-
-    user.value = response.data;
   } catch (error) {
-    err.value = error.response?.data?.message || "Failed to fetch user";
-    if (error.response?.status === 404) {
-      err.value = "No user found!";
-    }
   } finally {
-    loading.value = false;
   }
 });
 
