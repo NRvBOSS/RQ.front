@@ -1,5 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 pb-20">
+  <div
+    class="min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 pb-20 overflow-x-hidden"
+  >
     <!-- Header with timer and progress -->
     <div class="sticky top-0 bg-white shadow-md z-50">
       <div
@@ -61,6 +63,8 @@
         <div class="grid gap-3">
           <label
             v-for="option in q.options"
+            :key="option.key"
+            @click="selectAnswer(q.id, option.value)"
             class="flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all border border-transparent hover:border-amber-200"
             :class="{
               'border-amber-300 bg-amber-50': answers[q.id] === option.value,
@@ -279,10 +283,18 @@ const visibleQuestions = computed(() => {
   return questions.value.slice(start, end);
 });
 
-// API and timer
+// Methods
+const selectAnswer = (questionId, answer) => {
+  if (!submitted.value) {
+    answers.value[questionId] = answer;
+  }
+};
+
 onMounted(async () => {
   try {
-    const response = await axios.get("http://localhost:3000/questions");
+    const response = await axios.get(
+      "http://localhost:3000/questions"
+    );
     questions.value = response.data;
   } catch (error) {
     console.error("Error fetching questions:", error);
