@@ -261,6 +261,7 @@ const questions = ref([]);
 const answers = ref({});
 const submitted = ref(false);
 const timeLeft = ref(3600);
+const intervalId = ref(null);
 const t = ref(0);
 const f = ref(0);
 const currentPage = ref(1);
@@ -292,20 +293,18 @@ const selectAnswer = (questionId, answer) => {
 
 onMounted(async () => {
   try {
-    const response = await axios.get(
-      "http://localhost:3000/questions"
-    );
+    const response = await axios.get("http://localhost:3000/questions");
     questions.value = response.data;
   } catch (error) {
     console.error("Error fetching questions:", error);
   }
 
   // Timer start
-  const intervalId = setInterval(() => {
+  intervalId.value = setInterval(() => {
     if (timeLeft.value > 0) {
       timeLeft.value--;
     } else {
-      clearInterval(intervalId);
+      clearInterval(intervalId.value);
       if (!submitted.value) {
         checkAnswers();
       }
@@ -318,12 +317,20 @@ const nextPage = () => {
   if (currentPage.value * questionsPerPage < totalQuestions.value) {
     currentPage.value++;
   }
+  // window.scrollTo({
+  //   top: 0,
+  //   behavior: "smooth",
+  // });
 };
 
 const prevPage = () => {
   if (currentPage.value > 1) {
     currentPage.value--;
   }
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
 };
 
 // Check answers
@@ -331,6 +338,10 @@ const checkAnswers = () => {
   t.value = 0;
   f.value = 0;
   submitted.value = true;
+
+  // Stop the timer
+  clearInterval(intervalId.value)
+
 
   questions.value.forEach((q) => {
     if (answers.value[q.id] === q.correct) {
