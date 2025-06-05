@@ -317,10 +317,10 @@ const nextPage = () => {
   if (currentPage.value * questionsPerPage < totalQuestions.value) {
     currentPage.value++;
   }
-  // window.scrollTo({
-  //   top: 0,
-  //   behavior: "smooth",
-  // });
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
 };
 
 const prevPage = () => {
